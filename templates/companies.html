@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Jobs by Company - TechJobsBW</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+    <header>
+
+        <h1>
+            Opportunities to Serve
+        </h1>
+
+    </header>
+
+
+    <nav class="main-nav">
+
+        <a href="/">
+            All Jobs
+        </a>
+
+        <a href="/companies" class="active">
+            By Company
+        </a>
+
+    </nav>
+   <!-- =====================================================
+         PAGE TITLE
+        ===================================================== -->
+
+    <h2 class="page-title">
+        Jobs by Company
+    </h2>
+
+
+    <!-- =====================================================
+         COMPANY SEARCH
+         ===================================================== -->
+
+    <div class="search-container">
+
+        <input
+            type="text"
+            id="companySearchBar"
+            placeholder="Search company..."
+        >
+
+    </div>
+
+
+    <!-- =====================================================
+         COMPANY LIST
+         ===================================================== -->
+
+    <div id="companyContainer">
+
+
+        {% if companies %}
+
+
+            {% for company in companies %}
+
+
+            <a
+                href="{{ url_for(
+                    'company_jobs',
+                    company_id=company['company_id']
+                ) }}"
+                class="company-card"
+            >
+
+
+                <h2 class="company-name">
+
+                    {{ company["name"] }}
+
+                </h2>
+
+
+                <p>
+
+                    {{ company["job_count"] }}
+
+                    open position{% if company["job_count"] != 1 %}s{% endif %}
+
+                </p>
+
+
+            </a>
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+            <div class="company-card">
+
+                <h2>
+                    No vacancies available
+                </h2>
+
+                <p>
+                    There are currently no companies
+                    with available positions.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+
+</body>
+
+</html>

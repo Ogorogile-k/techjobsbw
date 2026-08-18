@@ -1,0 +1,540 @@
+/* ============================================================
+   GENERAL
+   ============================================================ */
+
+body{
+
+    margin:0;
+
+    font-family:Arial, Helvetica, sans-serif;
+
+    background:#75AADB;
+
+}
+
+.page-title{
+
+    color:white;
+
+    margin:25px 30px 0 30px;
+
+}
+
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+
+.main-nav{
+
+    background:#003366;
+
+    padding:18px 30px;
+
+    display:flex;
+
+    gap:10px;
+
+}
+
+
+/* Navigation links */
+
+.main-nav a{
+
+    color:white;
+
+    text-decoration:none;
+
+    font-weight:bold;
+
+    font-size:17px;
+
+    padding:10px 18px;
+
+    border-radius:5px;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+/* Hover */
+
+.main-nav a:hover{
+
+    background:#75AADB;
+
+    color:white;
+
+    transform:translateY(-2px);
+
+}
+
+
+/* Currently selected page */
+
+.main-nav a.active{
+
+    background:#75AADB;
+
+    color:white;
+
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+header{
+
+    background:#003366;
+
+    color:white;
+
+    padding:25px;
+
+}
+
+
+/* ============================================================
+   HEADER TITLE
+   ============================================================ */
+
+header h1{
+
+    margin:0;
+
+    margin-bottom:20px;
+
+    text-align:center;
+
+    font-size:48px;
+
+    font-weight:bold;
+
+    /*
+       Botswana flag colours inside the letters
+    */
+
+    background:
+        linear-gradient(
+            to right,
+
+            #75AADB 0%,
+            #75AADB 35%,
+
+            white 35%,
+            white 42%,
+
+            black 42%,
+            black 58%,
+
+            white 58%,
+            white 65%,
+
+            #75AADB 65%,
+            #75AADB 100%
+        );
+
+    background-size:0% 100%;
+
+    background-repeat:no-repeat;
+
+    background-position:left center;
+
+    -webkit-background-clip:text;
+
+    background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+    animation:
+        botswanaText 2s ease-out forwards;
+
+}
+
+
+/* ============================================================
+   HEADER TITLE ANIMATION
+   ============================================================ */
+
+@keyframes botswanaText{
+
+    from{
+
+        background-size:0% 100%;
+
+    }
+
+    to{
+
+        background-size:100% 100%;
+
+    }
+
+}
+
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+
+.search-container{
+
+    display:flex;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+
+    padding:20px 30px;
+
+}
+
+
+input,
+select{
+
+    padding:10px;
+
+    font-size:16px;
+
+    border-radius:5px;
+
+    border:none;
+
+}
+
+
+/* ============================================================
+   ALL JOBS
+   ============================================================ */
+
+#jobContainer{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(350px,1fr));
+
+    gap:20px;
+
+    padding:30px;
+
+}
+
+
+/* ============================================================
+   JOB CARD
+   ============================================================ */
+
+.job-card{
+
+    background-color:#fff5f5;
+
+    border:1px solid #f0cccc;
+
+    border-radius:10px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.08);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+/* Slightly move the tile toward the user */
+
+.job-card:hover{
+
+    transform:
+        translateY(-5px)
+        scale(1.01);
+
+    box-shadow:
+        0 8px 18px rgba(0,0,0,0.14);
+
+    cursor:pointer;
+
+}
+
+
+.job-card h2{
+
+    color:#003366;
+
+    margin-top:0;
+
+}
+
+
+.company{
+
+    font-weight:bold;
+
+}
+
+
+.company-name{
+
+    font-weight:bold;
+
+    color:#003366;
+
+}
+
+
+.location{
+
+    color:#555;
+
+}
+
+
+.description{
+
+    margin-top:15px;
+
+    margin-bottom:15px;
+
+}
+
+
+.expiry-date{
+
+    color:#555;
+
+}
+
+
+/* ============================================================
+   BUTTON
+   ============================================================ */
+
+button{
+
+    background:#061426;
+
+    color:white;
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:5px;
+
+    cursor:pointer;
+
+}
+
+
+button:hover{
+
+    background:#005ec4;
+
+}
+
+
+/* ============================================================
+   MORE INFORMATION / APPLY BUTTON
+   ============================================================ */
+
+.apply-button{
+
+    display:inline-block;
+
+    background:#003366;
+
+    color:white;
+
+    text-decoration:none;
+
+    padding:10px 18px;
+
+    border-radius:5px;
+
+    margin-top:10px;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.apply-button:hover{
+
+    background:#005ec4;
+
+    transform:translateY(-2px);
+
+}
+
+
+/* ============================================================
+   COMPANY CONTAINER
+   ============================================================ */
+
+#companyContainer{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(250px,1fr));
+
+    gap:20px;
+
+    padding:30px;
+
+}
+
+
+/* ============================================================
+   COMPANY CARD
+   ============================================================ */
+
+.company-card{
+
+    display:block;
+
+    background-color:#fff5f5;
+
+    border:1px solid #f0cccc;
+
+    border-radius:10px;
+
+    padding:25px;
+
+    text-decoration:none;
+
+    color:#003366;
+
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.08);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+.company-card:hover{
+
+    transform:
+        translateY(-5px)
+        scale(1.01);
+
+    box-shadow:
+        0 8px 18px rgba(0,0,0,0.14);
+
+    cursor:pointer;
+
+}
+
+
+.company-card h2{
+
+    margin-top:0;
+
+    color:#003366;
+
+}
+
+
+.company-card p{
+
+    color:#555;
+
+    font-size:16px;
+
+}
+
+
+/* ============================================================
+   COMPANY DESCRIPTION
+   ============================================================ */
+
+.company-description{
+
+    max-width:800px;
+
+    margin:20px 30px;
+
+    background:#fff5f5;
+
+    padding:20px;
+
+    border-radius:10px;
+
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media(max-width:600px){
+
+    .main-nav{
+
+        flex-direction:column;
+
+        gap:10px;
+
+        padding:15px;
+
+    }
+
+
+    header h1{
+
+        font-size:36px;
+
+    }
+
+
+    #jobContainer{
+
+        grid-template-columns:1fr;
+
+        padding:15px;
+
+    }
+
+
+    #companyContainer{
+
+        grid-template-columns:1fr;
+
+        padding:15px;
+
+    }
+
+
+    .search-container{
+
+        padding:15px;
+
+    }
+
+
+    .job-card{
+
+        margin-bottom:10px;
+
+    }
+
+}
