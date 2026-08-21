@@ -18,7 +18,8 @@ Original file is located at
 import os
 import re
 import json
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import requests
 import getpass
 import time
@@ -43,7 +44,17 @@ from google.genai.errors import ClientError
 # DATABASE
 ####################################################
 
-DATABASE = "jobs.db"
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
+
+def get_db_connection():
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
 
 
 ####################################################
@@ -195,10 +206,7 @@ def safe_get(dictionary, key):
 
 def get_companies():
 
-    conn = sqlite3.connect(DATABASE)
-
-    conn.row_factory = sqlite3.Row
-
+    conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -227,18 +235,15 @@ def get_companies():
 
 def get_existing_job(company_id, title, url):
 
-    conn = sqlite3.connect(DATABASE)
-
-    conn.row_factory = sqlite3.Row
-
+    conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
         SELECT *
         FROM jobs
-        WHERE company_id = ?
-          AND title = ?
-          AND url = ?
+        WHERE company_id = %s
+          AND title = %s
+          AND url = %s
         LIMIT 1
     """, (
         company_id,
@@ -254,19 +259,18 @@ def get_existing_job(company_id, title, url):
 
 def update_existing_job(job_id, job, expiry_date):
 
-    conn = sqlite3.connect(DATABASE)
-
+    conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
         UPDATE jobs
         SET
-            title = ?,
-            location = ?,
-            description = ?,
-            expiry_date = ?,
-            long_description = ?
-        WHERE id = ?
+            title = %s,
+            location = %s,
+            description = %s,
+            expiry_date = %s,
+            long_description = %s
+        WHERE id = %s
     """, (
 
         job.get("title", ""),
@@ -289,7 +293,7 @@ def update_existing_job(job_id, job, expiry_date):
 
 def delete_expired_jobs():
 
-    conn = sqlite3.connect(DATABASE)
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
@@ -297,7 +301,7 @@ def delete_expired_jobs():
         DELETE FROM jobs
         WHERE expiry_date IS NOT NULL
           AND TRIM(expiry_date) != ''
-          AND DATE(expiry_date) < DATE('now')
+          AND expiry_date::date < CURRENT_DATE
     """)
 
     deleted = cursor.rowcount
@@ -343,7 +347,7 @@ def normalize_expiry_date(date_string):
     date_string = re.sub(
         r'^(closing date|expiry date|expiration date|'
         r'deadline|applications close|apply by)'
-        r'\s*:?\s*',
+        r'\s*:%s\s*',
         '',
         date_string,
         flags=re.IGNORECASE
@@ -563,6 +567,15 @@ Rules:
 ####################################################
 
 def save_job(company, job, url):
+    # ------------------------------------------------
+    # REJECT INVALID JOBS
+    # ------------------------------------------------
+
+    title = job.get("title", "").strip()
+
+    if not title:
+        print("Skipping job with no title:", url)
+        return
 
     # ------------------------------------------------
     # CHECK IF JOB ALREADY EXISTS
@@ -570,7 +583,7 @@ def save_job(company, job, url):
 
     existing_job = get_existing_job(
         company["company_id"],
-        job["title"],
+        title,
         url
     )
 
@@ -630,7 +643,7 @@ def save_job(company, job, url):
 
             print(
                 f"Updated expiry date: "
-                f"{job['title']} → {expiry_date}"
+                f"{title} → {expiry_date}"
             )
 
         else:
@@ -644,7 +657,7 @@ def save_job(company, job, url):
     # NEW JOB
     # ------------------------------------------------
 
-    conn = sqlite3.connect(DATABASE)
+    conn = get_db_connection()
 
     cur = conn.cursor()
 
@@ -661,10 +674,10 @@ def save_job(company, job, url):
             date_found
         )
 
-        VALUES(?,?,?,?,?,?,?,?,?)
+        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """, (
 
-        job.get("title", ""),
+        title,
 
         company["name"],
 
