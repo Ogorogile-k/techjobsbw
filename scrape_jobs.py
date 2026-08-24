@@ -2514,16 +2514,30 @@ def scrape_bbs(company):
 # BTC
 ####################################################
 
+
 def scrape_btc(company):
 
     print("Checking BTC...")
 
     careers = "https://btc.bw/company/job-openings/"
 
-    scan_link(
-        company,
-        careers
-    )
+    links = extract_links(careers)
+
+    for url in links:
+
+        # Ignore the main BTC job openings page.
+        if url.rstrip("/") == careers.rstrip("/"):
+            continue
+
+        # Only process BTC individual career pages.
+        if "/company/careers/" not in url.lower():
+            continue
+
+        scan_link(
+            company,
+            url
+        )
+
 
 
 ####################################################
