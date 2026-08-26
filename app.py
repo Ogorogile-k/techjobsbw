@@ -8,9 +8,12 @@ Original file is located at
 """
 
 from flask import Flask, render_template, jsonify, Response
-import sqlite3
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
+
 
 # ============================================================
 # SEO
@@ -72,6 +75,7 @@ def sitemap():
     # --------------------------------------------------------
 
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
+
     xml.append(
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     )
@@ -89,8 +93,6 @@ def sitemap():
         mimetype="application/xml"
     )
 
-DATABASE = "jobs.db"
-
 
 # ============================================================
 # DATABASE CONNECTION
@@ -98,9 +100,18 @@ DATABASE = "jobs.db"
 
 def get_db_connection():
 
-    conn = sqlite3.connect(DATABASE)
+    database_url = os.environ.get("DATABASE_URL")
 
-    conn.row_factory = sqlite3.Row
+    if not database_url:
+
+        raise RuntimeError(
+            "DATABASE_URL environment variable is not set."
+        )
+
+    conn = psycopg2.connect(
+        database_url,
+        cursor_factory=RealDictCursor
+    )
 
     return conn
 
@@ -113,7 +124,6 @@ def get_db_connection():
 def home():
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -124,6 +134,7 @@ def home():
 
     jobs = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -140,7 +151,6 @@ def home():
 def get_jobs():
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -151,12 +161,10 @@ def get_jobs():
 
     jobs = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
-    return jsonify([
-        dict(job)
-        for job in jobs
-    ])
+    return jsonify(jobs)
 
 
 # ============================================================
@@ -167,7 +175,6 @@ def get_jobs():
 def companies():
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -191,6 +198,7 @@ def companies():
 
     companies = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -207,7 +215,6 @@ def companies():
 def company_jobs(company_id):
 
     conn = get_db_connection()
-
     cursor = conn.cursor()
 
     # --------------------------------------------------------
@@ -228,17 +235,17 @@ def company_jobs(company_id):
 
         FROM companies
 
-        WHERE company_id = ?
+        WHERE company_id = %s
     """, (company_id,))
 
     company = cursor.fetchone()
 
     if company is None:
 
+        cursor.close()
         conn.close()
 
         return "Company not found", 404
-
 
     # --------------------------------------------------------
     # Get company's jobs
@@ -248,13 +255,14 @@ def company_jobs(company_id):
         SELECT *
         FROM jobs
 
-        WHERE company_id = ?
+        WHERE company_id = %s
 
         ORDER BY date_found DESC
     """, (company_id,))
 
     jobs = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return render_template(
