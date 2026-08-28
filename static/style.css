@@ -87,6 +87,36 @@ body{
 
 
 /* ============================================================
+   ABOUT US NAVIGATION
+   ============================================================ */
+
+.main-nav .about-link{
+
+    margin-left:auto;
+
+    font-size:15px;
+
+    font-weight:normal;
+
+    padding:8px 14px;
+
+}
+
+
+/* ============================================================
+   HOME LINK
+   ============================================================ */
+
+.home-link{
+
+    font-size:16px !important;
+
+    font-weight:normal !important;
+
+}
+
+
+/* ============================================================
    HEADER
    ============================================================ */
 
@@ -116,6 +146,7 @@ header h1{
     font-size:48px;
 
     font-weight:bold;
+
 
     /*
        Botswana flag colours inside the letters
@@ -318,6 +349,18 @@ select{
 
 }
 
+/* ============================================================
+   CLOSING SOON
+   ============================================================ */
+
+.closing-soon{
+
+    color:#8B3A3A;
+
+    font-weight:bold;
+
+}
+
 
 /* ============================================================
    BUTTON
@@ -483,6 +526,85 @@ button:hover{
 
 
 /* ============================================================
+   ABOUT US PAGE
+   ============================================================ */
+
+.about-page{
+
+    background-image:
+        linear-gradient(
+            rgba(117,170,219,0.35),
+            rgba(117,170,219,0.35)
+        ),
+        url("/static/soft_pastel_globe_background.webp");
+
+    background-size:cover;
+
+    background-position:center;
+
+    background-repeat:no-repeat;
+
+    background-attachment:fixed;
+
+    min-height:100vh;
+
+}
+
+
+/* ============================================================
+   ABOUT US CONTENT
+   ============================================================ */
+
+.about-container{
+
+    padding:30px;
+
+    display:flex;
+
+    justify-content:center;
+
+}
+
+
+.about-card{
+
+    max-width:900px;
+
+    background:#fff5f5;
+
+    border:1px solid #f0cccc;
+
+    border-radius:10px;
+
+    padding:30px;
+
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.08);
+
+}
+
+
+.about-card h2{
+
+    color:#003366;
+
+    margin-top:0;
+
+}
+
+
+.about-card p{
+
+    color:#555;
+
+    font-size:17px;
+
+    line-height:1.7;
+
+}
+
+
+/* ============================================================
    MOBILE
    ============================================================ */
 
@@ -495,6 +617,13 @@ button:hover{
         gap:10px;
 
         padding:15px;
+
+    }
+
+
+    .main-nav .about-link{
+
+        margin-left:0;
 
     }
 
@@ -534,6 +663,20 @@ button:hover{
     .job-card{
 
         margin-bottom:10px;
+
+    }
+
+
+    .about-container{
+
+        padding:15px;
+
+    }
+
+
+    .about-card{
+
+        padding:20px;
 
     }
 

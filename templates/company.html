@@ -17,7 +17,26 @@
 
 </head>
 
+
 <body>
+
+
+    <!-- =====================================================
+         SITE HEADER
+         ===================================================== -->
+
+    <header>
+
+        <h1>
+            Opportunities to Serve
+        </h1>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN NAVIGATION
+         ===================================================== -->
 
     <nav class="main-nav">
 
@@ -25,14 +44,22 @@
             All Jobs
         </a>
 
-        <a href="/companies">
+        <a href="/companies" class="active">
             By Company
+        </a>
+
+        <a href="/about" class="about-link">
+            About Us
         </a>
 
     </nav>
 
 
-    <h1>
+    <!-- =====================================================
+         COMPANY INFORMATION
+         ===================================================== -->
+
+    <h1 class="page-title">
         {{ company["name"] }}
     </h1>
 
@@ -48,60 +75,124 @@
     {% endif %}
 
 
-    <h2>
+    <!-- =====================================================
+         OPEN POSITIONS
+         ===================================================== -->
+
+    <h2 class="page-title">
         Open Positions
     </h2>
 
 
+    <!-- =====================================================
+         JOB LIST
+         ===================================================== -->
+
     <div id="jobContainer">
+
 
         {% if jobs %}
 
+
             {% for job in jobs %}
+
 
             <div class="job-card">
 
+
+                <!-- =========================================
+                     JOB TITLE
+                     ========================================= -->
+
                 <h2 class="job-title">
+
                     {{ job["title"] }}
+
                 </h2>
 
 
+                <!-- =========================================
+                     LOCATION
+                     ========================================= -->
+
                 {% if job["location"] %}
 
-                <p>
+                <p class="location">
+
                     <strong>Location:</strong>
+
                     {{ job["location"] }}
+
                 </p>
 
                 {% endif %}
 
+
+                <!-- =========================================
+                     CLOSING DATE
+                     ========================================= -->
 
                 {% if job["expiry_date"] %}
 
-                <p class="expiry-date">
 
-                    <strong>Closing Date:</strong>
+                    {% if job["closing_soon"] %}
 
-                    {{ job["expiry_date"] }}
+                    <p class="expiry-date closing-soon">
 
-                </p>
+                        <strong>
+                            Closing Soon!!
+                        </strong>
+
+                        Closing Date:
+                        {{ job["expiry_date"] }}
+
+                    </p>
+
+
+                    {% else %}
+
+                    <p class="expiry-date">
+
+                        <strong>
+                            Closing Date:
+                        </strong>
+
+                        {{ job["expiry_date"] }}
+
+                    </p>
+
+                    {% endif %}
+
 
                 {% endif %}
 
+
+                <!-- =========================================
+                     MORE INFORMATION
+                     ========================================= -->
 
                 <a
                     href="{{ job['url'] }}"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="apply-button"
                 >
                     More Information
                 </a>
 
+
             </div>
+
 
             {% endfor %}
 
+
         {% else %}
+
+
+            <!-- =============================================
+                 NO JOBS
+                 ============================================= -->
 
             <div class="job-card">
 
@@ -110,15 +201,20 @@
                 </h2>
 
                 <p>
+
                     This company currently has no
                     open positions listed on TechJobsBW.
+
                 </p>
 
             </div>
 
+
         {% endif %}
 
+
     </div>
+
 
 </body>
 

@@ -9,8 +9,10 @@ Original file is located at
 
 from flask import Flask, render_template, jsonify, Response
 import os
+from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
 
 app = Flask(__name__)
 
@@ -46,7 +48,8 @@ def sitemap():
 
     urls = [
         "https://techjobsbw.onrender.com/",
-        "https://techjobsbw.onrender.com/companies"
+        "https://techjobsbw.onrender.com/companies",
+        "https://techjobsbw.onrender.com/about"
     ]
 
     # --------------------------------------------------------
@@ -114,6 +117,71 @@ def get_db_connection():
     )
 
     return conn
+
+
+# ============================================================
+# CLOSING SOON CHECK
+# ============================================================
+
+def mark_closing_soon(jobs):
+
+    now = datetime.now()
+
+    for job in jobs:
+
+        expiry = job.get("expiry_date")
+
+        # ----------------------------------------------------
+        # No expiry date
+        # ----------------------------------------------------
+
+        if not expiry:
+
+            job["closing_soon"] = False
+
+            continue
+
+        try:
+
+            # ------------------------------------------------
+            # Convert database date to datetime
+            # ------------------------------------------------
+
+            expiry_date = datetime.strptime(
+                str(expiry),
+                "%Y-%m-%d"
+            )
+
+            # ------------------------------------------------
+            # Treat the closing date as ending at 23:59:59
+            # ------------------------------------------------
+
+            deadline = expiry_date + timedelta(
+                days=1,
+                seconds=-1
+            )
+
+            # ------------------------------------------------
+            # Calculate time remaining
+            # ------------------------------------------------
+
+            time_remaining = deadline - now
+
+            # ------------------------------------------------
+            # Closing within the next 24 hours
+            # ------------------------------------------------
+
+            job["closing_soon"] = (
+                timedelta(0)
+                < time_remaining
+                <= timedelta(hours=24)
+            )
+
+        except (ValueError, TypeError):
+
+            job["closing_soon"] = False
+
+    return jobs
 
 
 # ============================================================
@@ -208,6 +276,18 @@ def companies():
 
 
 # ============================================================
+# ABOUT US
+# ============================================================
+
+@app.route("/about")
+def about():
+
+    return render_template(
+        "about.html"
+    )
+
+
+# ============================================================
 # INDIVIDUAL COMPANY
 # ============================================================
 
@@ -261,6 +341,12 @@ def company_jobs(company_id):
     """, (company_id,))
 
     jobs = cursor.fetchall()
+
+    # --------------------------------------------------------
+    # Mark jobs closing within 24 hours
+    # --------------------------------------------------------
+
+    jobs = mark_closing_soon(jobs)
 
     cursor.close()
     conn.close()

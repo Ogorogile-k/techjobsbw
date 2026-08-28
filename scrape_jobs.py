@@ -2365,6 +2365,8 @@ def scrape_botswana_life(company):
     )
 
 
+
+
 ####################################################
 # BOTSWANAPOST
 ####################################################
@@ -2373,7 +2375,7 @@ def scrape_botswanapost(company):
 
     print("Checking BotswanaPost...")
 
-    careers = "https://botswanapost.post/index.php/careers"
+    careers = "https://botswanapost.post/careers"
 
     page = download(careers)
 
@@ -2385,19 +2387,74 @@ def scrape_botswanapost(company):
         "lxml"
     )
 
+    rows = soup.find_all("tr")
+
     seen = set()
 
-    for link in soup.find_all(
-        "a",
-        href=True
-    ):
+    for row in rows:
+
+        # ------------------------------------------------
+        # TITLE
+        # ------------------------------------------------
+
+        title_cell = row.find(
+            "td",
+            class_="views-field-title"
+        )
+
+        # ------------------------------------------------
+        # CLOSING DATE
+        # ------------------------------------------------
+
+        date_cell = row.find(
+            "td",
+            class_="views-field-field__closing-date"
+        )
+
+        # ------------------------------------------------
+        # FILE LINK
+        # ------------------------------------------------
+
+        file_cell = row.find(
+            "td",
+            class_="views-field-field-file-"
+        )
+
+        #
+        # The row must contain all three fields.
+        #
+
+        if (
+            title_cell is None
+            or date_cell is None
+            or file_cell is None
+        ):
+            continue
+
+        title = title_cell.get_text(
+            " ",
+            strip=True
+        )
+
+        closing_date_text = date_cell.get_text(
+            " ",
+            strip=True
+        )
+
+        link = file_cell.find(
+            "a",
+            href=True
+        )
+
+        if link is None:
+            continue
 
         href = link.get(
             "href",
             ""
-        )
+        ).strip()
 
-        if should_skip_url(href):
+        if not href:
             continue
 
         url = urljoin(
@@ -2405,30 +2462,211 @@ def scrape_botswanapost(company):
             href
         )
 
+        # ------------------------------------------------
+        # ONLY PROCESS DOCUMENTS
+        # ------------------------------------------------
+
+        lower = url.lower()
+
+        if not (
+            lower.endswith(".pdf")
+            or lower.endswith(".doc")
+            or lower.endswith(".docx")
+        ):
+            continue
+
+        # ------------------------------------------------
+        # AVOID DUPLICATES
+        # ------------------------------------------------
+
         if url in seen:
             continue
 
         seen.add(url)
 
-        lower = url.lower()
+        print()
+        print("Checking BotswanaPost vacancy:")
+        print(url)
 
-        #
-        # BotswanaPost publishes vacancy
-        # advertisements as files.
-        #
+        print()
+        print("Careers page title:")
+        print(title)
 
-        if (
-            lower.endswith(".pdf")
-            or
-            lower.endswith(".doc")
-            or
-            lower.endswith(".docx")
-        ):
+        print()
+        print("Careers page closing date:")
+        print(closing_date_text)
 
-            scan_link(
-                company,
-                url
+        # ------------------------------------------------
+        # NORMALIZE CLOSING DATE
+        # ------------------------------------------------
+
+        closing_date = ""
+
+        date_formats = [
+            "%b %d, %Y",
+            "%B %d, %Y",
+            "%d %b %Y",
+            "%d %B %Y"
+        ]
+
+        for date_format in date_formats:
+
+            try:
+
+                closing_date = datetime.strptime(
+                    closing_date_text,
+                    date_format
+                ).strftime(
+                    "%Y-%m-%d"
+                )
+
+                break
+
+            except ValueError:
+
+                continue
+
+        # ------------------------------------------------
+        # INVALID DATE
+        # ------------------------------------------------
+
+        if not closing_date:
+
+            print(
+                "Warning: could not parse BotswanaPost "
+                "closing date:",
+                closing_date_text
             )
+
+        else:
+
+            print(
+                "Normalized closing date:",
+                closing_date
+            )
+
+            # ------------------------------------------------
+            # CHECK WHETHER THE JOB HAS EXPIRED
+            # ------------------------------------------------
+
+            try:
+
+                expiry = datetime.strptime(
+                    closing_date,
+                    "%Y-%m-%d"
+                ).date()
+
+                today = datetime.now().date()
+
+                if expiry < today:
+
+                    print(
+                        "Skipping expired BotswanaPost vacancy:"
+                    )
+
+                    print(
+                        f"{title} → expired {closing_date}"
+                    )
+
+                    continue
+
+            except ValueError:
+
+                print(
+                    "Warning: could not compare "
+                    "BotswanaPost closing date."
+                )
+
+        # ------------------------------------------------
+        # DOWNLOAD VACANCY DOCUMENT
+        # ------------------------------------------------
+
+        vacancy_page = download(url)
+
+        if vacancy_page is None:
+            continue
+
+        text = extract_text(
+            vacancy_page
+        )
+
+        if not text:
+            continue
+
+        # ------------------------------------------------
+        # QUICK VACANCY FILTER
+        # ------------------------------------------------
+
+        lower_text = text.lower()
+
+        indicators = [
+            "vacancy",
+            "vacancies",
+            "job summary",
+            "position requirements",
+            "qualifications",
+            "application instructions",
+            "applications"
+        ]
+
+        if not any(
+            indicator in lower_text
+            for indicator in indicators
+        ):
+            continue
+
+        # ------------------------------------------------
+        # GEMINI
+        # ------------------------------------------------
+
+        result = classify_job(
+            text,
+            url
+        )
+
+        if not result.get(
+            "is_job",
+            False
+        ):
+            continue
+
+        # ------------------------------------------------
+        # CAREERS PAGE IS THE AUTHORITATIVE DATE
+        # ------------------------------------------------
+
+        if closing_date:
+
+            result["closing_date"] = closing_date
+
+        # ------------------------------------------------
+        # USE CAREERS PAGE TITLE IF GEMINI MISSES IT
+        # ------------------------------------------------
+
+        if not result.get("title"):
+
+            result["title"] = title
+
+        # ------------------------------------------------
+        # PRINT JOB
+        # ------------------------------------------------
+
+        print_job(
+            company,
+            result,
+            url
+        )
+
+        # ------------------------------------------------
+        # SAVE JOB
+        # ------------------------------------------------
+
+        save_job(
+            company,
+            result,
+            url
+        )
+
+
 
 
 ####################################################
@@ -2539,9 +2777,13 @@ def scrape_btc(company):
         )
 
 
-
 ####################################################
 # FNB BOTSWANA / FIRSTRAND WORKDAY
+####################################################
+
+
+####################################################
+# FNB BOTSWANA
 ####################################################
 
 def scrape_fnb(company):
@@ -2554,133 +2796,231 @@ def scrape_fnb(company):
         "db69bdbc446c11de98360015c5e6daf6"
     )
 
-    page = download(careers)
+    job_links = []
 
-    if page is None:
-        return
+    ####################################################
+    # OPEN FNB WORKDAY
+    ####################################################
 
-    soup = BeautifulSoup(
-        page["content"],
-        "lxml"
-    )
+    try:
 
-    seen = set()
+        with sync_playwright() as p:
 
-    for link in soup.find_all(
-        "a",
-        href=True
-    ):
-
-        href = link.get(
-            "href",
-            ""
-        )
-
-        #
-        # Workday individual job pages
-        # contain /job/
-        #
-
-        if "/job/" not in href:
-            continue
-
-        job_url = urljoin(
-            careers,
-            href
-        )
-
-        if job_url in seen:
-            continue
-
-        seen.add(job_url)
-
-        #
-        # Visit the individual vacancy.
-        #
-
-        job_page = download(
-            job_url
-        )
-
-        if job_page is None:
-            continue
-
-        text = extract_text(
-            job_page
-        )
-
-        lower = text.lower()
-
-        #
-        # FNB Botswana does not necessarily state
-        # "FNB Botswana" on the job page.
-        #
-        # Instead, use Botswana/Gaborone as the
-        # location indicators.
-        #
-
-        if (
-            "gaborone" not in lower
-            and
-            "botswana" not in lower
-        ):
-            continue
-
-        #
-        # Let Gemini determine whether the page
-        # is an actual job vacancy and extract:
-        #
-        # title
-        # location
-        # closing date
-        # description
-        #
-
-        result = classify_job(
-            text,
-            job_url
-        )
-
-        if not result.get(
-            "is_job",
-            False
-        ):
-            continue
-
-        #
-        # Additional Botswana safeguard.
-        #
-        # Gemini must also identify the vacancy
-        # as being in Botswana/Gaborone.
-        #
-
-        result_location = str(
-            result.get(
-                "location",
-                ""
+            browser = p.chromium.launch(
+                headless=True
             )
-        ).lower()
 
-        if (
-            "gaborone" not in result_location
-            and
-            "botswana" not in result_location
-        ):
+            page = browser.new_page()
 
-            continue
+            print("Opening FNB Workday...")
 
-        print_job(
-            company,
-            result,
-            job_url
+            page.goto(
+                careers,
+                wait_until="domcontentloaded",
+                timeout=120000
+            )
+
+            print("Page loaded.")
+
+            #
+            # Workday needs time to render the jobs.
+            #
+
+            page.wait_for_timeout(10000)
+
+            ####################################################
+            # FIND BOTSWANA JOB LINKS
+            ####################################################
+
+            print()
+            print("Looking for FNB Botswana job links...")
+
+            links = page.locator("a").all()
+
+            for link in links:
+
+                try:
+
+                    href = link.get_attribute(
+                        "href"
+                    )
+
+                    if not href:
+                        continue
+
+                    #
+                    # FNB Botswana jobs use:
+                    #
+                    # /job/Gaborone/
+                    #
+
+                    if "/job/Gaborone/" not in href:
+                        continue
+
+                    job_url = urljoin(
+                        careers,
+                        href
+                    )
+
+                    if job_url in job_links:
+                        continue
+
+                    job_links.append(
+                        job_url
+                    )
+
+                except Exception:
+                    continue
+
+            print()
+            print(
+                "FNB Botswana jobs found:",
+                len(job_links)
+            )
+
+            ####################################################
+            # OPEN EACH JOB
+            ####################################################
+
+            for job_url in job_links:
+
+                print()
+                print("=" * 60)
+                print("OPENING FNB JOB")
+                print("=" * 60)
+                print(job_url)
+
+                job_page = browser.new_page()
+
+                try:
+
+                    job_page.goto(
+                        job_url,
+                        wait_until="domcontentloaded",
+                        timeout=120000
+                    )
+
+                    #
+                    # Workday needs time to render
+                    # the job details.
+                    #
+
+                    job_page.wait_for_timeout(
+                        10000
+                    )
+
+                    text = job_page.locator(
+                        "body"
+                    ).inner_text()
+
+                    ################################################
+                    # BOTSWANA SAFETY CHECK
+                    ################################################
+
+                    lower = text.lower()
+
+                    if (
+                        "gaborone" not in lower
+                        and
+                        "botswana" not in lower
+                    ):
+
+                        print(
+                            "Skipping: not a Botswana vacancy."
+                        )
+
+                        continue
+
+                    ################################################
+                    # SEND TO GEMINI
+                    ################################################
+
+                    result = classify_job(
+                        text,
+                        job_url
+                    )
+
+                    if not result.get(
+                        "is_job",
+                        False
+                    ):
+
+                        print(
+                            "Skipping: Gemini did not "
+                            "identify this as a job."
+                        )
+
+                        continue
+
+                    ################################################
+                    # LOCATION SAFETY CHECK
+                    ################################################
+
+                    result_location = str(
+                        result.get(
+                            "location",
+                            ""
+                        )
+                    ).lower()
+
+                    #
+                    # Gemini occasionally fails to extract
+                    # the location even though Workday clearly
+                    # shows Gaborone.
+                    #
+                    # Since we already verified the page itself
+                    # contains Gaborone/Botswana, use Gaborone.
+                    #
+
+                    if (
+                        "gaborone" not in result_location
+                        and
+                        "botswana" not in result_location
+                    ):
+
+                        result["location"] = "Gaborone"
+
+                    ################################################
+                    # PRINT JOB
+                    ################################################
+
+                    print_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                    ################################################
+                    # SAVE JOB
+                    ################################################
+
+                    save_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "Error processing FNB job:"
+                    )
+
+                    print(e)
+
+                finally:
+
+                    job_page.close()
+
+            browser.close()
+
+    except Exception as e:
+
+        print()
+        print(
+            "FNB scraper error:",
+            e
         )
-
-        save_job(
-            company,
-            result,
-            job_url
-        )
-
 
 ####################################################
 # WATER UTILITIES CORPORATION
