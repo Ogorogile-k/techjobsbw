@@ -8,7 +8,37 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>TechJobsBW - Opportunities to Serve</title>
+    <title>Latest Job Vacancies in Botswana | TechJobsBW</title>
+
+    <meta name="description"
+          content="Find the latest job vacancies in Botswana from leading companies and organisations, all in one place. Search jobs by title, location, and company with TechJobsBW.">
+
+    <meta name="keywords"
+          content="jobs in Botswana, Botswana jobs, job vacancies Botswana, careers Botswana, employment Botswana, Gaborone jobs, Francistown jobs, TechJobsBW">
+
+    <meta name="robots"
+          content="index, follow">
+
+    <link rel="canonical"
+          href="https://techjobsbw.onrender.com/">
+
+    <!-- Open Graph / Social Sharing -->
+
+    <meta property="og:title"
+          content="Latest Job Vacancies in Botswana | TechJobsBW">
+
+    <meta property="og:description"
+          content="Find job opportunities from leading companies and organisations in Botswana, all in one place.">
+
+    <meta property="og:type"
+          content="website">
+
+    <meta property="og:url"
+          content="https://techjobsbw.onrender.com/">
+
+    <meta property="og:site_name"
+          content="TechJobsBW">
+
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
@@ -72,9 +102,13 @@
             type="text"
             id="searchBar"
             placeholder="Search job title..."
+            aria-label="Search job title"
         >
 
-        <select id="locationFilter">
+        <select
+            id="locationFilter"
+            aria-label="Filter jobs by location"
+        >
 
             <option value="">
                 All Locations
@@ -152,6 +186,7 @@
                 <a
                     href="{{ job['url'] }}"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="apply-button"
                 >
                     More Information

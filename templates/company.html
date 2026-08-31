@@ -8,9 +8,45 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
+
     <title>
-        {{ company["name"] }} - TechJobsBW
+        {{ company["name"] }} Jobs in Botswana | TechJobsBW
     </title>
+
+
+    <meta name="description"
+          content="Find the latest {{ company['name'] }} job vacancies in Botswana. Browse available positions, locations and closing dates on TechJobsBW.">
+
+
+    <meta name="robots"
+          content="index, follow">
+
+
+    <link rel="canonical"
+          href="https://techjobsbw.onrender.com/company/{{ company['company_id'] }}">
+
+
+    <!-- Open Graph / Social Sharing -->
+
+    <meta property="og:title"
+          content="{{ company['name'] }} Jobs in Botswana | TechJobsBW">
+
+
+    <meta property="og:description"
+          content="Browse available {{ company['name'] }} job opportunities in Botswana on TechJobsBW.">
+
+
+    <meta property="og:type"
+          content="website">
+
+
+    <meta property="og:url"
+          content="https://techjobsbw.onrender.com/company/{{ company['company_id'] }}">
+
+
+    <meta property="og:site_name"
+          content="TechJobsBW">
+
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
@@ -44,7 +80,7 @@
             All Jobs
         </a>
 
-        <a href="/companies" class="active">
+        <a href="/companies">
             By Company
         </a>
 
@@ -75,10 +111,6 @@
     {% endif %}
 
 
-    <!-- =====================================================
-         OPEN POSITIONS
-         ===================================================== -->
-
     <h2 class="page-title">
         Open Positions
     </h2>
@@ -100,20 +132,10 @@
             <div class="job-card">
 
 
-                <!-- =========================================
-                     JOB TITLE
-                     ========================================= -->
-
                 <h2 class="job-title">
-
                     {{ job["title"] }}
-
                 </h2>
 
-
-                <!-- =========================================
-                     LOCATION
-                     ========================================= -->
 
                 {% if job["location"] %}
 
@@ -128,48 +150,18 @@
                 {% endif %}
 
 
-                <!-- =========================================
-                     CLOSING DATE
-                     ========================================= -->
-
                 {% if job["expiry_date"] %}
 
+                <p class="expiry-date">
 
-                    {% if job["closing_soon"] %}
+                    <strong>Closing Date:</strong>
 
-                    <p class="expiry-date closing-soon">
+                    {{ job["expiry_date"] }}
 
-                        <strong>
-                            Closing Soon!!
-                        </strong>
-
-                        Closing Date:
-                        {{ job["expiry_date"] }}
-
-                    </p>
-
-
-                    {% else %}
-
-                    <p class="expiry-date">
-
-                        <strong>
-                            Closing Date:
-                        </strong>
-
-                        {{ job["expiry_date"] }}
-
-                    </p>
-
-                    {% endif %}
-
+                </p>
 
                 {% endif %}
 
-
-                <!-- =========================================
-                     MORE INFORMATION
-                     ========================================= -->
 
                 <a
                     href="{{ job['url'] }}"
@@ -190,10 +182,6 @@
         {% else %}
 
 
-            <!-- =============================================
-                 NO JOBS
-                 ============================================= -->
-
             <div class="job-card">
 
                 <h2>
@@ -201,10 +189,8 @@
                 </h2>
 
                 <p>
-
                     This company currently has no
                     open positions listed on TechJobsBW.
-
                 </p>
 
             </div>
