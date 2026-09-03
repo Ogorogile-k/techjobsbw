@@ -3023,6 +3023,595 @@ def scrape_fnb(company):
         )
 
 ####################################################
+# ABSA BANK BOTSWANA
+####################################################
+
+def scrape_absa(company):
+
+    print("Checking Absa Bank Botswana...")
+
+    careers = (
+        "https://absa.wd3.myworkdayjobs.com/"
+        "en-US/ABSAcareersite?locationCountry="
+        "db69bdbc446c11de98360015c5e6daf6"
+    )
+
+    job_links = []
+
+    ####################################################
+    # OPEN ABSA WORKDAY
+    ####################################################
+
+    try:
+
+        with sync_playwright() as p:
+
+            browser = p.chromium.launch(
+                headless=True
+            )
+
+            page = browser.new_page()
+
+            print("Opening Absa Workday...")
+
+            page.goto(
+                careers,
+                wait_until="domcontentloaded",
+                timeout=120000
+            )
+
+            print("Page loaded.")
+
+            #
+            # Workday needs time to render the vacancies.
+            #
+
+            page.wait_for_timeout(10000)
+
+            ####################################################
+            # FIND ABSA BOTSWANA JOB LINKS
+            ####################################################
+
+            print()
+            print(
+                "Looking for Absa Botswana job links..."
+            )
+
+            links = page.locator("a").all()
+
+            for link in links:
+
+                try:
+
+                    href = link.get_attribute(
+                        "href"
+                    )
+
+                    if not href:
+                        continue
+
+                    #
+                    # Absa Workday can expose individual
+                    # vacancies using either /job/ or
+                    # /details/ URL structures.
+                    #
+
+                    if (
+                        "/job/" not in href
+                        and
+                        "/details/" not in href
+                    ):
+
+                        continue
+
+                    job_url = urljoin(
+                        careers,
+                        href
+                    )
+
+                    #
+                    # Make sure this is an Absa Workday
+                    # vacancy rather than another link.
+                    #
+
+                    if "absa.wd3.myworkdayjobs.com" not in job_url:
+                        continue
+
+                    if job_url in job_links:
+                        continue
+
+                    job_links.append(
+                        job_url
+                    )
+
+                except Exception:
+                    continue
+
+            print()
+            print(
+                "Absa job links found:",
+                len(job_links)
+            )
+
+            ####################################################
+            # OPEN EACH JOB
+            ####################################################
+
+            for job_url in job_links:
+
+                print()
+                print("=" * 60)
+                print("OPENING ABSA JOB")
+                print("=" * 60)
+                print(job_url)
+
+                job_page = browser.new_page()
+
+                try:
+
+                    job_page.goto(
+                        job_url,
+                        wait_until="domcontentloaded",
+                        timeout=120000
+                    )
+
+                    #
+                    # Workday needs time to render
+                    # the job details.
+                    #
+
+                    job_page.wait_for_timeout(
+                        10000
+                    )
+
+                    text = job_page.locator(
+                        "body"
+                    ).inner_text()
+
+                    ################################################
+                    # BOTSWANA SAFETY CHECK
+                    ################################################
+
+                    lower = text.lower()
+
+                    if "botswana" not in lower:
+
+                        print(
+                            "Skipping: not a Botswana vacancy."
+                        )
+
+                        continue
+
+                    ################################################
+                    # SEND TO GEMINI
+                    ################################################
+
+                    result = classify_job(
+                        text,
+                        job_url
+                    )
+
+                    if not result.get(
+                        "is_job",
+                        False
+                    ):
+
+                        print(
+                            "Skipping: Gemini did not "
+                            "identify this as a job."
+                        )
+
+                        continue
+
+                    ################################################
+                    # LOCATION
+                    ################################################
+
+                    #
+                    # This scraper is specifically for
+                    # Absa Botswana.
+                    #
+                    # TechJobsBW uses country-level
+                    # locations, so always save:
+                    #
+                    #     Botswana
+                    #
+
+                    result["location"] = "Botswana"
+
+                    ################################################
+                    # PRINT JOB
+                    ################################################
+
+                    print_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                    ################################################
+                    # SAVE JOB
+                    ################################################
+
+                    save_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "Error processing Absa job:"
+                    )
+
+                    print(e)
+
+                finally:
+
+                    job_page.close()
+
+            browser.close()
+
+    except Exception as e:
+
+        print()
+        print(
+            "Absa scraper error:",
+            e
+        )
+
+####################################################
+# BIHL
+####################################################
+
+def scrape_bihl(company):
+
+    print("Checking BIHL...")
+
+    careers = "https://bihl.simplify.hr/"
+
+    try:
+        with sync_playwright() as p:
+
+            browser = p.chromium.launch(headless=True)
+
+            page = browser.new_page()
+
+            print("Opening BIHL careers...")
+
+            page.goto(
+                careers,
+                wait_until="domcontentloaded",
+                timeout=120000
+            )
+
+            print("Page loaded.")
+
+            page.wait_for_timeout(5000)
+
+            print()
+            print("Looking for BIHL vacancy links...")
+
+            links = page.locator("a").all()
+
+            job_links = []
+
+            for link in links:
+
+                try:
+
+                    href = link.get_attribute("href")
+
+                    if not href:
+                        continue
+
+                    # Simplify HR uses /Vacancy/ with a capital V
+                    if "/vacancy/" not in href.lower():
+                        continue
+
+                    job_url = urljoin(
+                        careers,
+                        href
+                    )
+
+                    if job_url in job_links:
+                        continue
+
+                    job_links.append(job_url)
+
+                except Exception:
+                    continue
+
+            print()
+            print(
+                "BIHL vacancy links found:",
+                len(job_links)
+            )
+
+            for job_url in job_links:
+
+                print()
+                print("=" * 60)
+                print("OPENING BIHL JOB")
+                print("=" * 60)
+                print(job_url)
+
+                job_page = browser.new_page()
+
+                try:
+
+                    job_page.goto(
+                        job_url,
+                        wait_until="domcontentloaded",
+                        timeout=120000
+                    )
+
+                    job_page.wait_for_timeout(5000)
+
+                    text = job_page.locator(
+                        "body"
+                    ).inner_text()
+
+                    lower = text.lower()
+
+                    if "botswana" not in lower:
+                        print(
+                            "Skipping: not a Botswana vacancy."
+                        )
+                        continue
+
+                    result = classify_job(
+                        text,
+                        job_url
+                    )
+
+                    if not result.get(
+                        "is_job",
+                        False
+                    ):
+                        print(
+                            "Skipping: Gemini did not "
+                            "identify this as a job."
+                        )
+                        continue
+
+                    # TechJobsBW uses country-level location
+                    result["location"] = "Botswana"
+
+                    # Detect BIFM-specific vacancies
+                    bifm_specific = result.get(
+                        "bifm_specific",
+                        False
+                    )
+
+                    if bifm_specific:
+
+                        title = str(
+                            result.get("title", "")
+                        ).strip()
+
+                        if title and "(BIFM)" not in title.upper():
+
+                            result["title"] = (
+                                f"{title} (BIFM)"
+                            )
+
+                            print(
+                                "BIFM-specific vacancy detected."
+                            )
+
+                    print_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                    save_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "Error processing BIHL job:"
+                    )
+
+                    print(e)
+
+                finally:
+
+                    job_page.close()
+
+            browser.close()
+
+    except Exception as e:
+
+        print()
+        print("BIHL scraper error:")
+        print(e)
+
+####################################################
+# BOTSWANA LIFE
+####################################################
+
+def scrape_botswana_life(company):
+
+    print("Checking Botswana Life...")
+
+    careers = (
+        "https://www.trending-talent.com/home/"
+        "CompanyVacancies?Company=Botswana%20Life"
+        "&Internal=SFP8dONg3BoZJS/Z42zE9w=="
+    )
+
+    try:
+        with sync_playwright() as p:
+
+            browser = p.chromium.launch(headless=True)
+
+            page = browser.new_page()
+
+            print("Opening Botswana Life careers...")
+
+            page.goto(
+                careers,
+                wait_until="domcontentloaded",
+                timeout=120000
+            )
+
+            print("Page loaded.")
+
+            # Give the page time to render vacancies
+            page.wait_for_timeout(5000)
+
+            print()
+            print("Looking for Botswana Life vacancy links...")
+
+            links = page.locator("a").all()
+
+            job_links = []
+
+            for link in links:
+
+                try:
+
+                    href = link.get_attribute("href")
+
+                    if not href:
+                        continue
+
+                    # Trending Talent vacancy links
+                    if "vacancydetails" not in href.lower():
+                        continue
+
+                    job_url = urljoin(
+                        careers,
+                        href
+                    )
+
+                    if job_url in job_links:
+                        continue
+
+                    job_links.append(job_url)
+
+                except Exception:
+                    continue
+
+            print()
+            print(
+                "Botswana Life vacancy links found:",
+                len(job_links)
+            )
+
+            # No vacancies is a valid result
+            if not job_links:
+
+                print(
+                    "No Botswana Life vacancies currently listed."
+                )
+
+                browser.close()
+                return
+
+            for job_url in job_links:
+
+                print()
+                print("=" * 60)
+                print("OPENING BOTSWANA LIFE JOB")
+                print("=" * 60)
+                print(job_url)
+
+                job_page = browser.new_page()
+
+                try:
+
+                    job_page.goto(
+                        job_url,
+                        wait_until="domcontentloaded",
+                        timeout=120000
+                    )
+
+                    job_page.wait_for_timeout(5000)
+
+                    text = job_page.locator(
+                        "body"
+                    ).inner_text()
+
+                    lower = text.lower()
+
+                    # Make sure this is a Botswana Life vacancy
+                    if (
+                        "botswana life" not in lower
+                        and
+                        "botswana life insurance" not in lower
+                    ):
+                        print(
+                            "Skipping: not a Botswana Life vacancy."
+                        )
+                        continue
+
+                    # Make sure it is a Botswana vacancy
+                    if "botswana" not in lower:
+                        print(
+                            "Skipping: not a Botswana vacancy."
+                        )
+                        continue
+
+                    result = classify_job(
+                        text,
+                        job_url
+                    )
+
+                    if not result.get(
+                        "is_job",
+                        False
+                    ):
+                        print(
+                            "Skipping: Gemini did not "
+                            "identify this as a job."
+                        )
+                        continue
+
+                    # TechJobsBW uses country-level location
+                    result["location"] = "Botswana"
+
+                    print_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                    save_job(
+                        company,
+                        result,
+                        job_url
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "Error processing "
+                        "Botswana Life job:"
+                    )
+
+                    print(e)
+
+                finally:
+
+                    job_page.close()
+
+            browser.close()
+
+    except Exception as e:
+
+        print()
+        print("Botswana Life scraper error:")
+        print(e)
+
+####################################################
 # WATER UTILITIES CORPORATION
 ####################################################
 
@@ -3159,9 +3748,22 @@ def run_scraper(company):
 
         scrape_fnb(company)
 
+
+    elif "absa bank botswana" in name:
+
+        scrape_absa(company)
+
     elif "first national bank" in name:
 
         scrape_fnb(company)
+
+    elif "bihl" in name:
+
+        scrape_bihl(company)
+
+    elif "botswana life" in name:
+
+        scrape_botswana_life(company)
 
     elif "water utilities" in name:
 
