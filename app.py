@@ -9,6 +9,7 @@ Original file is located at
 
 from flask import Flask, render_template, jsonify, Response
 import os
+import re
 from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -16,6 +17,27 @@ from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
 
+# ============================================================
+# SEO-FRIENDLY JOB SLUG
+# ============================================================
+
+def create_job_slug(title, company, job_id):
+
+    text = f"{title}-{company}"
+
+    # Convert to lowercase
+    text = text.lower()
+
+    # Replace anything that is not a letter or number with a hyphen
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+
+    # Remove leading/trailing hyphens
+    text = text.strip("-")
+
+    # Add the permanent job ID
+    return f"{text}-{job_id}"
+
+app.jinja_env.globals["create_job_slug"] = create_job_slug
 
 # ============================================================
 # SEO
@@ -275,6 +297,8 @@ def companies():
     )
 
 
+
+
 # ============================================================
 # ABOUT US
 # ============================================================
@@ -360,15 +384,27 @@ def company_jobs(company_id):
 # JOB SUMMARY
 # ============================================================
 
-@app.route("/job/<int:job_id>")
-def job_summary(job_id):
+@app.route("/job/<slug>")
+def job_summary(slug):
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # --------------------------------------------------------
+    # Extract job ID from the end of the SEO-friendly slug
+    # --------------------------------------------------------
+
+    match = re.search(r"-(\d+)$", slug)
+
+    if not match:
+        return "Job not found", 404
+
+    job_id = int(match.group(1))
+
 
     # --------------------------------------------------------
     # Get job and associated company
     # --------------------------------------------------------
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT
@@ -390,13 +426,14 @@ def job_summary(job_id):
     cursor.close()
     conn.close()
 
+
     # --------------------------------------------------------
     # Job not found
     # --------------------------------------------------------
 
     if job is None:
-
         return "Job not found", 404
+
 
     # --------------------------------------------------------
     # Mark closing soon
@@ -406,14 +443,40 @@ def job_summary(job_id):
 
     job = job_list[0]
 
+
+    # --------------------------------------------------------
+    # Create the correct SEO-friendly slug
+    # --------------------------------------------------------
+
+    correct_slug = create_job_slug(
+        job["title"],
+        job["company_name"],
+        job["id"]
+    )
+
+
+    # --------------------------------------------------------
+    # Redirect old/incorrect URLs to the correct URL
+    # --------------------------------------------------------
+
+    if slug != correct_slug:
+
+        from flask import redirect
+
+        return redirect(
+            f"/job/{correct_slug}",
+            code=301
+        )
+
+
     # --------------------------------------------------------
     # Display Job Summary page
     # --------------------------------------------------------
 
     return render_template(
-       "job_summary.html",
-       job=job,
-       current_year=datetime.now().year
+        "job_summary.html",
+        job=job,
+        current_year=datetime.now().year
     )
 
 # ============================================================

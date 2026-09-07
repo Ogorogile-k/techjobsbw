@@ -9,47 +9,83 @@
           content="width=device-width, initial-scale=1.0">
 
 
+    <!-- =====================================================
+         PAGE TITLE
+         ===================================================== -->
+
     <title>
         {{ company["name"] }} Jobs in Botswana | TechJobsBW
     </title>
 
 
-    <meta name="description"
-          content="Find the latest {{ company['name'] }} job vacancies in Botswana. Browse available positions, locations and closing dates on TechJobsBW.">
+    <!-- =====================================================
+         SEO DESCRIPTION
+         ===================================================== -->
+
+    <meta
+        name="description"
+        content="Find the latest {{ company['name'] }} job vacancies in Botswana. Browse available positions, locations and closing dates on TechJobsBW."
+    >
 
 
-    <meta name="robots"
-          content="index, follow">
+    <meta
+        name="robots"
+        content="index, follow"
+    >
 
 
-    <link rel="canonical"
-          href="https://techjobsbw.onrender.com/company/{{ company['company_id'] }}">
+    <!-- =====================================================
+         CANONICAL URL
+         ===================================================== -->
+
+    <link
+        rel="canonical"
+        href="https://techjobsbw.onrender.com/company/{{ company['company_id'] }}"
+    >
 
 
-    <!-- Open Graph / Social Sharing -->
+    <!-- =====================================================
+         OPEN GRAPH / SOCIAL SHARING
+         ===================================================== -->
 
-    <meta property="og:title"
-          content="{{ company['name'] }} Jobs in Botswana | TechJobsBW">
-
-
-    <meta property="og:description"
-          content="Browse available {{ company['name'] }} job opportunities in Botswana on TechJobsBW.">
-
-
-    <meta property="og:type"
-          content="website">
+    <meta
+        property="og:title"
+        content="{{ company['name'] }} Jobs in Botswana | TechJobsBW"
+    >
 
 
-    <meta property="og:url"
-          content="https://techjobsbw.onrender.com/company/{{ company['company_id'] }}">
+    <meta
+        property="og:description"
+        content="Browse available {{ company['name'] }} job opportunities in Botswana on TechJobsBW."
+    >
 
 
-    <meta property="og:site_name"
-          content="TechJobsBW">
+    <meta
+        property="og:type"
+        content="website"
+    >
 
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <meta
+        property="og:url"
+        content="https://techjobsbw.onrender.com/company/{{ company['company_id'] }}"
+    >
+
+
+    <meta
+        property="og:site_name"
+        content="TechJobsBW"
+    >
+
+
+    <!-- =====================================================
+         STYLESHEET
+         ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
 </head>
 
@@ -80,9 +116,11 @@
             All Jobs
         </a>
 
+
         <a href="/companies" class="active">
             By Company
         </a>
+
 
         <a href="/about" class="about-link">
             About Us
@@ -111,6 +149,10 @@
     {% endif %}
 
 
+    <!-- =====================================================
+         OPEN POSITIONS
+         ===================================================== -->
+
     <h2 class="page-title">
         Open Positions
     </h2>
@@ -129,16 +171,45 @@
             {% for job in jobs %}
 
 
+            <!-- =================================================
+                 JOB CARD
+                 =================================================
+
+                 The job URL now uses the SEO-friendly slug.
+
+                 Example:
+
+                 /job/bancassurance-commercial-manager-absa-bank-botswana-67
+
+                 ================================================= -->
+
             <a
-                href="{{ url_for('job_summary', job_id=job['id']) }}"
+                href="{{ url_for(
+                    'job_summary',
+                    slug=create_job_slug(
+                        job['title'],
+                        job['company'],
+                        job['id']
+                    )
+                ) }}"
                 class="job-card"
             >
 
 
+                <!-- =================================================
+                     JOB TITLE
+                     ================================================= -->
+
                 <h2 class="job-title">
+
                     {{ job["title"] }}
+
                 </h2>
 
+
+                <!-- =================================================
+                     LOCATION
+                     ================================================= -->
 
                 {% if job["location"] %}
 
@@ -153,6 +224,10 @@
                 {% endif %}
 
 
+                <!-- =================================================
+                     CLOSING DATE
+                     ================================================= -->
+
                 {% if job["expiry_date"] %}
 
                 <p
@@ -165,8 +240,11 @@
                 >
 
                     {% if job.get('closing_soon') %}
+
                         Closing soon!!
+
                     {% endif %}
+
 
                     <strong>Closing Date:</strong>
 
@@ -177,8 +255,14 @@
                 {% endif %}
 
 
+                <!-- =================================================
+                     JOB SUMMARY BUTTON
+                     ================================================= -->
+
                 <span class="apply-button">
+
                     Job Summary
+
                 </span>
 
 
@@ -191,11 +275,16 @@
         {% else %}
 
 
+            <!-- =================================================
+                 NO VACANCIES MESSAGE
+                 ================================================= -->
+
             <div class="job-card">
 
                 <h2>
                     No vacancies available.
                 </h2>
+
 
                 <p>
                     This company currently has no

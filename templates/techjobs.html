@@ -30,7 +30,9 @@
           href="https://techjobsbw.onrender.com/">
 
 
-    <!-- Open Graph / Social Sharing -->
+    <!-- =====================================================
+         OPEN GRAPH / SOCIAL SHARING
+         ===================================================== -->
 
     <meta property="og:title"
           content="Latest Job Vacancies in Botswana | TechJobsBW">
@@ -51,6 +53,10 @@
     <meta property="og:site_name"
           content="TechJobsBW">
 
+
+    <!-- =====================================================
+         STYLESHEET
+         ===================================================== -->
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
@@ -157,21 +163,49 @@
             {% for job in jobs %}
 
 
+            <!-- =================================================
+                 JOB CARD
+
+                 The URL now uses the SEO-friendly job slug.
+                 Example:
+
+                 /job/bancassurance-commercial-manager-absa-bank-botswana-67
+                 ================================================= -->
+
             <a
-                href="{{ url_for('job_summary', job_id=job['id']) }}"
+                href="{{ url_for(
+                    'job_summary',
+                    slug=create_job_slug(
+                        job['title'],
+                        job['company'],
+                        job['id']
+                    )
+                ) }}"
                 class="job-card"
             >
 
+
+                <!-- =================================================
+                     JOB TITLE
+                     ================================================= -->
 
                 <h2 class="job-title">
                     {{ job["title"] }}
                 </h2>
 
 
+                <!-- =================================================
+                     COMPANY
+                     ================================================= -->
+
                 <h3 class="company-name">
                     {{ job["company"] }}
                 </h3>
 
+
+                <!-- =================================================
+                     LOCATION
+                     ================================================= -->
 
                 {% if job["location"] %}
 
@@ -186,6 +220,10 @@
                 {% endif %}
 
 
+                <!-- =================================================
+                     CLOSING DATE
+                     ================================================= -->
+
                 {% if job["expiry_date"] %}
 
                 <p
@@ -198,8 +236,11 @@
                 >
 
                     {% if job.get('closing_soon') %}
+
                         Closing soon!!
+
                     {% endif %}
+
 
                     <strong>Closing Date:</strong>
 
@@ -209,6 +250,10 @@
 
                 {% endif %}
 
+
+                <!-- =================================================
+                     JOB SUMMARY BUTTON
+                     ================================================= -->
 
                 <span class="apply-button">
                     Job Summary
@@ -223,6 +268,10 @@
 
         {% else %}
 
+
+            <!-- =================================================
+                 NO JOBS MESSAGE
+                 ================================================= -->
 
             <div class="job-card">
 
@@ -247,7 +296,9 @@
          JAVASCRIPT
          ===================================================== -->
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script
+        src="{{ url_for('static', filename='script.js') }}">
+    </script>
 
 
 </body>
