@@ -356,7 +356,65 @@ def company_jobs(company_id):
         company=company,
         jobs=jobs
     )
+# ============================================================
+# JOB SUMMARY
+# ============================================================
 
+@app.route("/job/<int:job_id>")
+def job_summary(job_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # --------------------------------------------------------
+    # Get job and associated company
+    # --------------------------------------------------------
+
+    cursor.execute("""
+        SELECT
+            j.*,
+            c.name AS company_name,
+            c.website AS company_website,
+            c.company_id AS company_id
+
+        FROM jobs j
+
+        INNER JOIN companies c
+            ON j.company_id = c.company_id
+
+        WHERE j.id = %s
+    """, (job_id,))
+
+    job = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    # --------------------------------------------------------
+    # Job not found
+    # --------------------------------------------------------
+
+    if job is None:
+
+        return "Job not found", 404
+
+    # --------------------------------------------------------
+    # Mark closing soon
+    # --------------------------------------------------------
+
+    job_list = mark_closing_soon([job])
+
+    job = job_list[0]
+
+    # --------------------------------------------------------
+    # Display Job Summary page
+    # --------------------------------------------------------
+
+    return render_template(
+       "job_summary.html",
+       job=job,
+       current_year=datetime.now().year
+    )
 
 # ============================================================
 # RUN APPLICATION

@@ -80,7 +80,7 @@
             All Jobs
         </a>
 
-        <a href="/companies">
+        <a href="/companies" class="active">
             By Company
         </a>
 
@@ -129,7 +129,10 @@
             {% for job in jobs %}
 
 
-            <div class="job-card">
+            <a
+                href="{{ url_for('job_summary', job_id=job['id']) }}"
+                class="job-card"
+            >
 
 
                 <h2 class="job-title">
@@ -152,7 +155,18 @@
 
                 {% if job["expiry_date"] %}
 
-                <p class="expiry-date">
+                <p
+                    class="
+                        expiry-date
+                        {% if job.get('closing_soon') %}
+                            closing-soon
+                        {% endif %}
+                    "
+                >
+
+                    {% if job.get('closing_soon') %}
+                        Closing soon!!
+                    {% endif %}
 
                     <strong>Closing Date:</strong>
 
@@ -163,17 +177,12 @@
                 {% endif %}
 
 
-                <a
-                    href="{{ job['url'] }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="apply-button"
-                >
-                    More Information
-                </a>
+                <span class="apply-button">
+                    Job Summary
+                </span>
 
 
-            </div>
+            </a>
 
 
             {% endfor %}

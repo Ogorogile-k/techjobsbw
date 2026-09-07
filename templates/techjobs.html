@@ -8,33 +8,45 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Latest Job Vacancies in Botswana | TechJobsBW</title>
+
+    <title>
+        Latest Job Vacancies in Botswana | TechJobsBW
+    </title>
+
 
     <meta name="description"
           content="Find the latest job vacancies in Botswana from leading companies and organisations, all in one place. Search jobs by title, location, and company with TechJobsBW.">
 
+
     <meta name="keywords"
           content="jobs in Botswana, Botswana jobs, job vacancies Botswana, careers Botswana, employment Botswana, Gaborone jobs, Francistown jobs, TechJobsBW">
+
 
     <meta name="robots"
           content="index, follow">
 
+
     <link rel="canonical"
           href="https://techjobsbw.onrender.com/">
+
 
     <!-- Open Graph / Social Sharing -->
 
     <meta property="og:title"
           content="Latest Job Vacancies in Botswana | TechJobsBW">
 
+
     <meta property="og:description"
           content="Find job opportunities from leading companies and organisations in Botswana, all in one place.">
+
 
     <meta property="og:type"
           content="website">
 
+
     <meta property="og:url"
           content="https://techjobsbw.onrender.com/">
+
 
     <meta property="og:site_name"
           content="TechJobsBW">
@@ -105,6 +117,7 @@
             aria-label="Search job title"
         >
 
+
         <select
             id="locationFilter"
             aria-label="Filter jobs by location"
@@ -144,7 +157,10 @@
             {% for job in jobs %}
 
 
-            <div class="job-card">
+            <a
+                href="{{ url_for('job_summary', job_id=job['id']) }}"
+                class="job-card"
+            >
 
 
                 <h2 class="job-title">
@@ -172,7 +188,18 @@
 
                 {% if job["expiry_date"] %}
 
-                <p class="expiry-date">
+                <p
+                    class="
+                        expiry-date
+                        {% if job.get('closing_soon') %}
+                            closing-soon
+                        {% endif %}
+                    "
+                >
+
+                    {% if job.get('closing_soon') %}
+                        Closing soon!!
+                    {% endif %}
 
                     <strong>Closing Date:</strong>
 
@@ -183,17 +210,12 @@
                 {% endif %}
 
 
-                <a
-                    href="{{ job['url'] }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="apply-button"
-                >
-                    More Information
-                </a>
+                <span class="apply-button">
+                    Job Summary
+                </span>
 
 
-            </div>
+            </a>
 
 
             {% endfor %}

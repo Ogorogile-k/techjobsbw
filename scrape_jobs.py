@@ -7,6 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1DtQbhpH-TeXCeQ8HBRRbxvMddO_9seHc
 """
 
+# Commented out IPython magic to ensure Python compatibility.
 ####################################################
 # scrape_jobs.py
 #
@@ -567,15 +568,24 @@ Rules:
 ####################################################
 
 def save_job(company, job, url):
+
     # ------------------------------------------------
     # REJECT INVALID JOBS
     # ------------------------------------------------
 
-    title = job.get("title", "").strip()
+    title = str(
+        job.get("title", "")
+    ).strip()
 
     if not title:
-        print("Skipping job with no title:", url)
+
+        print(
+            "Skipping job with no title:",
+            url
+        )
+
         return
+
 
     # ------------------------------------------------
     # CHECK IF JOB ALREADY EXISTS
@@ -619,31 +629,336 @@ def save_job(company, job, url):
 
 
     # ------------------------------------------------
-    # JOB ALREADY EXISTS
+    # BASIC JOB INFORMATION
     # ------------------------------------------------
+
+    location = str(
+        job.get("location", "")
+    ).strip()
+
+
+    summary = str(
+        job.get("summary", "")
+    ).strip()
+
+
+    responsibilities_summary = str(
+        job.get("responsibilities_summary", "")
+    ).strip()
+
+
+    qualifications_summary = str(
+        job.get("qualifications_summary", "")
+    ).strip()
+
+
+    how_to_apply = str(
+        job.get("how_to_apply", "")
+    ).strip()
+
+
+    job_category = str(
+        job.get("job_category", "")
+    ).strip()
+
+
+    # ------------------------------------------------
+    # RESPONSIBILITIES
+    # ------------------------------------------------
+
+    responsibilities = job.get(
+        "responsibilities",
+        []
+    )
+
+    if isinstance(
+        responsibilities,
+        list
+    ):
+
+        responsibilities = "\n".join(
+            f"• {str(item).strip()}"
+            for item in responsibilities
+            if str(item).strip()
+        )
+
+    else:
+
+        responsibilities = str(
+            responsibilities
+        ).strip()
+
+
+    # ------------------------------------------------
+    # QUALIFICATIONS
+    # ------------------------------------------------
+
+    qualifications = job.get(
+        "qualifications",
+        []
+    )
+
+    if isinstance(
+        qualifications,
+        list
+    ):
+
+        qualifications = "\n".join(
+            f"• {str(item).strip()}"
+            for item in qualifications
+            if str(item).strip()
+        )
+
+    else:
+
+        qualifications = str(
+            qualifications
+        ).strip()
+
+
+    # =================================================
+    # JOB ALREADY EXISTS
+    # =================================================
 
     if existing_job:
 
-        # --------------------------------------------
-        # UPDATE MISSING EXPIRY DATE
-        # --------------------------------------------
+        # ---------------------------------------------
+        # EXISTING VALUES
+        # ---------------------------------------------
 
-        existing_expiry = existing_job["expiry_date"]
+        existing_summary = (
+            existing_job.get("summary")
+            or ""
+        )
 
-        if (
-            (not existing_expiry or not str(existing_expiry).strip())
-            and expiry_date
-        ):
+        existing_responsibilities = (
+            existing_job.get("responsibilities")
+            or ""
+        )
 
-            update_existing_job(
-                existing_job["id"],
-                job,
+        existing_responsibilities_summary = (
+            existing_job.get(
+                "responsibilities_summary"
+            )
+            or ""
+        )
+
+        existing_qualifications = (
+            existing_job.get("qualifications")
+            or ""
+        )
+
+        existing_qualifications_summary = (
+            existing_job.get(
+                "qualifications_summary"
+            )
+            or ""
+        )
+
+        existing_how_to_apply = (
+            existing_job.get("how_to_apply")
+            or ""
+        )
+
+        existing_category = (
+            existing_job.get("job_category")
+            or ""
+        )
+
+        existing_location = (
+            existing_job.get("location")
+            or ""
+        )
+
+
+        # ---------------------------------------------
+        # USE NEW VALUE IF AVAILABLE
+        # OTHERWISE KEEP EXISTING VALUE
+        # ---------------------------------------------
+
+        new_summary = (
+            summary
+            if summary
+            else existing_summary
+        )
+
+
+        new_responsibilities = (
+            responsibilities
+            if responsibilities
+            else existing_responsibilities
+        )
+
+
+        new_responsibilities_summary = (
+            responsibilities_summary
+            if responsibilities_summary
+            else existing_responsibilities_summary
+        )
+
+
+        new_qualifications = (
+            qualifications
+            if qualifications
+            else existing_qualifications
+        )
+
+
+        new_qualifications_summary = (
+            qualifications_summary
+            if qualifications_summary
+            else existing_qualifications_summary
+        )
+
+
+        new_how_to_apply = (
+            how_to_apply
+            if how_to_apply
+            else existing_how_to_apply
+        )
+
+
+        new_category = (
+            job_category
+            if job_category
+            else existing_category
+        )
+
+
+        new_location = (
+            location
+            if location
+            else existing_location
+        )
+
+
+        # ---------------------------------------------
+        # DETERMINE WHETHER UPDATE IS NEEDED
+        # ---------------------------------------------
+
+        needs_update = (
+
+            new_summary
+            != existing_summary
+
+            or
+
+            new_responsibilities
+            != existing_responsibilities
+
+            or
+
+            new_responsibilities_summary
+            != existing_responsibilities_summary
+
+            or
+
+            new_qualifications
+            != existing_qualifications
+
+            or
+
+            new_qualifications_summary
+            != existing_qualifications_summary
+
+            or
+
+            new_how_to_apply
+            != existing_how_to_apply
+
+            or
+
+            new_category
+            != existing_category
+
+            or
+
+            new_location
+            != existing_location
+
+            or
+
+            (
+                (
+                    not existing_job.get(
+                        "expiry_date"
+                    )
+
+                    or
+
+                    not str(
+                        existing_job.get(
+                            "expiry_date"
+                        )
+                    ).strip()
+                )
+
+                and
+
                 expiry_date
             )
+        )
+
+
+        # ---------------------------------------------
+        # UPDATE EXISTING JOB
+        # ---------------------------------------------
+
+        if needs_update:
+
+            conn = get_db_connection()
+
+            cur = conn.cursor()
+
+            cur.execute("""
+                UPDATE jobs
+
+                SET
+                    location = %s,
+                    expiry_date = %s,
+                    summary = %s,
+                    responsibilities = %s,
+                    responsibilities_summary = %s,
+                    qualifications = %s,
+                    qualifications_summary = %s,
+                    how_to_apply = %s,
+                    job_category = %s
+
+                WHERE id = %s
+            """, (
+                new_location,
+
+                (
+                    expiry_date
+                    if expiry_date
+                    else existing_job.get(
+                        "expiry_date"
+                    )
+                ),
+
+                new_summary,
+
+                new_responsibilities,
+
+                new_responsibilities_summary,
+
+                new_qualifications,
+
+                new_qualifications_summary,
+
+                new_how_to_apply,
+
+                new_category,
+
+                existing_job["id"]
+            ))
+
+            conn.commit()
+
+            conn.close()
 
             print(
-                f"Updated expiry date: "
-                f"{title} → {expiry_date}"
+                f"Updated job information: {title}"
             )
 
         else:
@@ -653,13 +968,14 @@ def save_job(company, job, url):
         return
 
 
-    # ------------------------------------------------
+    # =================================================
     # NEW JOB
-    # ------------------------------------------------
+    # =================================================
 
     conn = get_db_connection()
 
     cur = conn.cursor()
+
 
     cur.execute("""
         INSERT INTO jobs(
@@ -671,42 +987,85 @@ def save_job(company, job, url):
             long_description,
             company_id,
             url,
-            date_found
+            date_found,
+            summary,
+            responsibilities,
+            responsibilities_summary,
+            qualifications,
+            qualifications_summary,
+            how_to_apply,
+            job_category
         )
 
-        VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        VALUES(
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s,
+#             %s
+        )
     """, (
 
         title,
 
         company["name"],
 
-        job.get("location", ""),
+        location,
 
+        # Keep old field populated for now.
         job.get("reason", ""),
 
         expiry_date,
 
+        # Keep old field populated for now.
         job.get("description", ""),
 
         company["company_id"],
 
         url,
 
-        datetime.now().strftime("%Y-%m-%d")
+        datetime.now().strftime(
+            "%Y-%m-%d"
+        ),
 
+        summary,
+
+        responsibilities,
+
+        responsibilities_summary,
+
+        qualifications,
+
+        qualifications_summary,
+
+        how_to_apply,
+
+        job_category
     ))
+
 
     conn.commit()
 
     conn.close()
 
 
-    # ------------------------------------------------
-    # UPDATE STATISTICS
-    # ------------------------------------------------
-
     STATS["jobs_saved"] += 1
+
+
+    print(
+        f"Saved job: {title}"
+    )
 
 
 
@@ -1125,115 +1484,346 @@ def extract_links(base_url):
 
 def classify_job(text, url):
 
-    #
-    # Don't waste Gemini requests on tiny pages.
-    #
-
     if len(text.strip()) < 250:
 
         return {
-
             "is_job": False
-
         }
 
 
     prompt = f"""
 
-You are a Botswana job vacancy detector.
+You are a professional job vacancy extraction system
+for a Botswana-focused employment website.
 
-Determine whether the following webpage is an
-ACTUAL JOB VACANCY.
+Your task is to determine whether the webpage below
+contains an ACTUAL JOB VACANCY and, if it does,
+extract the important information needed to create
+a clear and concise Job Summary for applicants.
 
 Ignore:
 
 - contact pages
-- news
-- company information
+- news articles
+- company information pages
 - customer portals
 - management pages
 - privacy pages
 - policy pages
+- general careers landing pages
+- pages listing multiple vacancies without information
+  about a specific vacancy
+
+A genuine job vacancy normally contains information
+such as a specific position, responsibilities,
+requirements, qualifications, application instructions,
+or a closing date.
 
 Return ONLY valid JSON.
 
+Use exactly this structure:
+
 {{
-"is_job": true,
-"title":"",
-"location":"",
-"closing_date":"",
-"description":"",
-"confidence":0,
-"reason":""
+    "is_job": true,
+    "title": "",
+    "location": "",
+    "closing_date": "",
+
+    "summary": "",
+
+    "responsibilities": [],
+
+    "responsibilities_summary": "",
+
+    "qualifications": [],
+
+    "qualifications_summary": "",
+
+    "how_to_apply": "",
+
+    "job_category": "",
+
+    "confidence": 0,
+
+    "reason": ""
 }}
 
-URL
+
+IMPORTANT RULES:
+
+1. Do NOT invent information.
+
+2. Only extract information that is explicitly stated
+   on the webpage or can be safely summarized from
+   information explicitly stated on the webpage.
+
+3. If information is not available, return an empty
+   value rather than guessing.
+
+
+------------------------------------------------------------
+SUMMARY
+------------------------------------------------------------
+
+4. "summary" must be a concise explanation of:
+
+   - what the role is about
+   - why the position exists
+   - the main purpose of the role
+
+   It should normally be approximately 2–4 sentences.
+
+5. If the vacancy contains an important condition
+   affecting the nature of the opportunity, include it
+   in the summary when relevant.
+
+   Examples include:
+
+   - commission-based work
+   - performance-based compensation
+   - contract work
+   - temporary work
+   - internship or graduate programme
+   - shift work
+   - significant travel requirements
+   - remote or hybrid work
+   - other unusual working arrangements
+
+   Do NOT create a separate employment_type field.
+
+
+------------------------------------------------------------
+RESPONSIBILITIES
+------------------------------------------------------------
+
+6. "responsibilities" must contain the major duties
+   explicitly stated or clearly summarized from the
+   vacancy.
+
+   Return these as a JSON array of individual strings.
+
+   Do not include trivial or repetitive duties.
+
+7. "responsibilities_summary" must provide a SHORT,
+   natural-language summary of the main responsibilities.
+
+   The purpose is to give a reader a quick understanding
+   of what they would actually be doing in the role.
+
+   Write approximately 1–3 sentences.
+
+   Combine related responsibilities into broader themes.
+
+   Do NOT simply copy the responsibilities list.
+
+   Do NOT write a long comma-separated list.
+
+   Do NOT introduce information that is not present
+   in the vacancy.
+
+   Example:
+
+   "The role involves managing financial performance,
+   supporting product development, overseeing risk
+   requirements, and providing training to relevant
+   teams."
+
+
+------------------------------------------------------------
+QUALIFICATIONS
+------------------------------------------------------------
+
+8. "qualifications" must contain the important:
+
+   - academic qualifications
+   - professional qualifications
+   - experience
+   - technical skills
+   - certifications
+   - knowledge
+   - other explicit requirements
+
+   Return these as a JSON array of individual strings.
+
+   Do not include trivial or repetitive requirements.
+
+9. "qualifications_summary" must provide a SHORT,
+   natural-language summary of the main requirements.
+
+   Write approximately 1–3 sentences.
+
+   Combine related requirements into broader themes.
+
+   Do NOT simply copy the qualifications list.
+
+   Do NOT write a long comma-separated list.
+
+   Do NOT introduce requirements that are not present
+   in the vacancy.
+
+   Example:
+
+   "Applicants should have atleast 2 years of relevant financial-services
+   experience, a bachelors degree in a related program, with some relevant professional
+   qualifications or a masters degree preffered."
+
+
+------------------------------------------------------------
+HOW TO APPLY
+------------------------------------------------------------
+
+10. "how_to_apply" should explain how an applicant is
+    instructed to apply.
+
+    Include relevant information such as:
+
+    - application website
+    - email address
+    - application portal
+    - documents required
+    - application instructions
+
+    Do not invent an application method.
+
+
+------------------------------------------------------------
+JOB CATEGORY
+------------------------------------------------------------
+
+11. "job_category" should identify the broad professional
+    category of the vacancy.
+
+    Examples:
+
+    - Banking and Financial Services
+    - Information Technology
+    - Engineering
+    - Accounting
+    - Human Resources
+    - Marketing
+    - Legal
+    - Mining
+    - Healthcare
+
+    Choose the most appropriate category based on the
+    actual vacancy.
+
+
+------------------------------------------------------------
+LOCATION
+------------------------------------------------------------
+
+12. "location" should contain the job location stated
+    on the vacancy.
+
+
+------------------------------------------------------------
+CLOSING DATE
+------------------------------------------------------------
+
+13. "closing_date" should contain the closing date exactly
+    as understood from the vacancy.
+
+    Do NOT guess a closing date.
+
+
+------------------------------------------------------------
+CONFIDENCE
+------------------------------------------------------------
+
+14. "confidence" should be a number from 0 to 100
+    representing your confidence that this is an actual
+    job vacancy.
+
+
+------------------------------------------------------------
+REASON
+------------------------------------------------------------
+
+15. "reason" should briefly explain why the webpage was
+    classified as a job vacancy or not.
+
+
+------------------------------------------------------------
+IF THIS IS NOT A JOB
+------------------------------------------------------------
+
+16. If this is NOT an actual job vacancy, return:
+
+{{
+    "is_job": false,
+    "title": "",
+    "location": "",
+    "closing_date": "",
+    "summary": "",
+    "responsibilities": [],
+    "responsibilities_summary": "",
+    "qualifications": [],
+    "qualifications_summary": "",
+    "how_to_apply": "",
+    "job_category": "",
+    "confidence": 0,
+    "reason": ""
+}}
+
+
+URL:
 
 {url}
 
-CONTENT
+
+WEBPAGE CONTENT:
 
 {text[:9000]}
 
 """
 
+
     retries = 3
+
 
     while retries > 0:
 
         try:
 
             response = client.models.generate_content(
-
                 model=MODEL,
-
                 contents=prompt
-
             )
+
 
             result = response.text
 
-            result = result.replace(
 
+            result = result.replace(
                 "```json",
-
                 ""
-
             )
+
 
             result = result.replace(
-
                 "```",
-
                 ""
-
             )
+
 
             result = result.strip()
+
 
             return json.loads(result)
 
 
         except ClientError as e:
 
-            #
-            # Gemini rate limit.
-            #
-
             if "429" in str(e):
 
                 print()
-
                 print(
-
                     "Gemini rate limit reached."
-
                 )
 
                 print(
-
                     "Waiting 60 seconds..."
-
                 )
 
                 time.sleep(60)
@@ -1242,38 +1832,30 @@ CONTENT
 
                 continue
 
+
             print(e)
 
             return {
-
                 "is_job": False
-
             }
 
 
         except Exception as e:
 
             print()
-
             print(
-
                 "Classifier error"
-
             )
 
             print(e)
 
             return {
-
                 "is_job": False
-
             }
 
 
     return {
-
         "is_job": False
-
     }
 
 
